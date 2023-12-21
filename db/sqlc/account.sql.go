@@ -11,7 +11,7 @@ import (
 
 const addAccountBalance = `-- name: AddAccountBalance :one
 UPDATE accounts
-set balance = balance + $1
+SET balance = balance + $1
 WHERE id = $2
 RETURNING id, owner, balance, currency, created_at
 `
@@ -41,8 +41,7 @@ INSERT INTO accounts (
   currency
 ) VALUES (
   $1, $2, $3
-)
-RETURNING id, owner, balance, currency, created_at
+) RETURNING id, owner, balance, currency, created_at
 `
 
 type CreateAccountParams struct {
@@ -113,18 +112,20 @@ func (q *Queries) GetAccountForUpdate(ctx context.Context, id int64) (Account, e
 
 const listAccounts = `-- name: ListAccounts :many
 SELECT id, owner, balance, currency, created_at FROM accounts
+WHERE owner = $1
 ORDER BY id
-LIMIT $1
-OFFSET $2
+LIMIT $2
+OFFSET $3
 `
 
 type ListAccountsParams struct {
-	Limit  int32 `json:"limit"`
-	Offset int32 `json:"offset"`
+	Owner  string `json:"owner"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
 }
 
 func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]Account, error) {
-	rows, err := q.db.QueryContext(ctx, listAccounts, arg.Limit, arg.Offset)
+	rows, err := q.db.QueryContext(ctx, listAccounts, arg.Owner, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +155,7 @@ func (q *Queries) ListAccounts(ctx context.Context, arg ListAccountsParams) ([]A
 
 const updateAccount = `-- name: UpdateAccount :one
 UPDATE accounts
-set balance = $2
+SET balance = $2
 WHERE id = $1
 RETURNING id, owner, balance, currency, created_at
 `

@@ -8,9 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
 func TestTransferTx(t *testing.T) {
-
 	store := NewStore(testDB)
 
 	account1 := createRandomAccount(t)
@@ -89,7 +87,7 @@ func TestTransferTx(t *testing.T) {
 		require.NotEmpty(t, toAccount)
 		require.Equal(t, account2.ID, toAccount.ID)
 
-		//check balances
+		// check balances
 		fmt.Println(">> tx:", fromAccount.Balance, toAccount.Balance)
 
 		diff1 := account1.Balance - fromAccount.Balance
@@ -105,10 +103,10 @@ func TestTransferTx(t *testing.T) {
 	}
 
 	// check the final updated balance
-	updatedAccount1, err := testQueries.GetAccount(context.Background(), account1.ID)
+	updatedAccount1, err := store.GetAccount(context.Background(), account1.ID)
 	require.NoError(t, err)
 
-	updatedAccount2, err := testQueries.GetAccount(context.Background(), account2.ID)
+	updatedAccount2, err := store.GetAccount(context.Background(), account2.ID)
 	require.NoError(t, err)
 
 	fmt.Println(">> after:", updatedAccount1.Balance, updatedAccount2.Balance)
@@ -118,7 +116,6 @@ func TestTransferTx(t *testing.T) {
 }
 
 func TestTransferTxDeadlock(t *testing.T) {
-
 	store := NewStore(testDB)
 
 	account1 := createRandomAccount(t)
@@ -127,10 +124,8 @@ func TestTransferTxDeadlock(t *testing.T) {
 
 	n := 10
 	amount := int64(10)
-
 	errs := make(chan error)
 
-	// run n concurrent transfer transaction
 	for i := 0; i < n; i++ {
 		fromAccountID := account1.ID
 		toAccountID := account2.ID
@@ -139,6 +134,7 @@ func TestTransferTxDeadlock(t *testing.T) {
 			fromAccountID = account2.ID
 			toAccountID = account1.ID
 		}
+
 		go func() {
 			_, err := store.TransferTx(context.Background(), TransferTxParams{
 				FromAccountID: fromAccountID,
@@ -149,8 +145,6 @@ func TestTransferTxDeadlock(t *testing.T) {
 			errs <- err
 		}()
 	}
-
-	// check results
 
 	for i := 0; i < n; i++ {
 		err := <-errs

@@ -6,8 +6,7 @@ INSERT INTO users (
   email
 ) VALUES (
   $1, $2, $3, $4
-)
-RETURNING *;
+) RETURNING *;
 
 -- name: GetUser :one
 SELECT * FROM users
